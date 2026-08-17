@@ -1,0 +1,40 @@
+services:
+  prometheus:
+    image: prom/prometheus:${PROMETHEUS_VERSION}
+    container_name: ${PROJECT_NAME}-prometheus
+    restart: unless-stopped
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro # mount scrape config read-only
+      - prometheus-data:/prometheus # named volume for persistent TSDB storage
+    ports:
+      - "${PROMETHEUS_PORT}:9090"
+    networks:
+      - monitoring
+
+  # Grafana: dashboards and visualization, reads from Prometheus
+  grafana:
+    image: grafana/grafana:${GRAFANA_VERSION}
+    container_name: ${PROJECT_NAME}-grafana
+    restart: unless-stopped
+    volumes:
+      - grafana-data:/var/lib/grafana # named volume for dashboards, users, sessions
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro # datasource/dashboard provisioning, read-only
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER}
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER_PASSWORD}
+    ports:
+      - "${GRAFANA_PORT}:3000"
+    networks:
+      - monitoring
+    depends_on:
+      - prometheus
+
+# named volumes: Docker-managed storage, independent of container lifecycle
+volumes:
+  prometheus-data:
+  grafana-data:
+
+# custom bridge network: isolates the stack, enables DNS-based service discovery
+networks:
+  monitoring:
+    driver: bridge
