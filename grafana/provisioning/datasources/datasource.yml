@@ -1,0 +1,10 @@
+apiVersion: 1
+
+datasources:
+  # auto-register Prometheus so it's available with zero manual UI setup
+  - name: Prometheus
+    type: prometheus
+    access: proxy # Grafana backend proxies requests to Prometheus
+    url: http://prometheus:9090
+    isDefault: true # pre-selected datasource when creating new dashboards/panels
+    editable: true # allow tweaking in the UI after provisioning
